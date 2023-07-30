@@ -1,0 +1,55 @@
+-- // "Q" Silent Aim Shotgun
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function findClosestPlayer(Character)
+
+    local closestPlayer, closestDistanceSq = nil, math.huge
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local distanceSq = (player.Character.HumanoidRootPart.Position - Character.HumanoidRootPart.Position).magnitude
+            if distanceSq < closestDistanceSq then
+                closestPlayer = player
+                closestDistanceSq = distanceSq
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+local function fireShotgunAtClosestPlayer(Character)
+    local closestPlayer = findClosestPlayer(Character)
+    if closestPlayer then
+        local Shotgun = Character:FindFirstChild("Shotgun")
+        if Shotgun then
+            local direction = (closestPlayer.Character.HumanoidRootPart.Position - Character.HumanoidRootPart.Position).unit
+            local args = {
+                [1] = Ray.new(Character.HumanoidRootPart.Position, direction)
+            }
+            Shotgun.RemoteBridge:FireServer(unpack(args))
+        end
+    end
+end
+
+local function onCharacterAdded(newCharacter)
+    local Humanoid = newCharacter:WaitForChild("Humanoid")
+    Humanoid.Died:Connect(function()
+        wait(2)
+        onCharacterAdded(newCharacter)
+    end)
+
+    game:GetService("UserInputService").InputBegan:Connect(function(input, isProcessed)
+        if not isProcessed and input.KeyCode == Enum.KeyCode.Q then
+            fireShotgunAtClosestPlayer(newCharacter)
+        end
+    end)
+end
+
+LocalPlayer.CharacterAdded:Connect(onCharacterAdded)
+
+if LocalPlayer.Character then
+    onCharacterAdded(LocalPlayer.Character)
+end
