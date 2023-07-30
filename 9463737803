@@ -1,0 +1,42 @@
+-- // will auto return balls in shitty tennis game
+
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local courtHitBall = replicatedStorage.Court_ClientHitBall
+
+local settings = {
+    autoReturn = true,
+    hitInterval = 0.5,
+}
+
+local ballPositions = {
+    Vector3.new(-197.6132354736328, 2.9615981578826904, -48.13761901855469),
+    Vector3.new(-185.12654876708984, 3.0425913333892822, -40.31754684448242),
+    Vector3.new(-199.87991333007812, 2.9638988971710205, -60.01871871948242),
+}
+
+local hitTypes = {
+    "Perfect",
+	"Normal",
+}
+
+function hitBall(position, hitType)
+    local args = {
+        [1] = position,
+        [2] = hitType,
+    }
+
+    courtHitBall:InvokeServer(unpack(args))
+end
+
+local function getRandomTableEntry(table)
+    return table[math.random(1, #table)]
+end
+
+local function onAutoReturn()
+    while settings.autoReturn do
+        hitBall(getRandomTableEntry(ballPositions), getRandomTableEntry(hitTypes))
+        wait(settings.hitInterval)
+    end
+end
+
+onAutoReturn()
